@@ -2,7 +2,7 @@
 # !pip install Pillow==4.0.0
 # %matplotlib inline
 
-#info of addon -------------------
+# info of addon -------------------
 
 bl_info = {
     "name": "Neural Style Transfer",
@@ -16,17 +16,12 @@ bl_info = {
     "category": "Add Mesh",
 }
 
-
-import torch
-import torch.nn as nn
-import torchvision
-import PIL
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import numpy as np
-from PIL import Image
-#from matplotlib import transforms
+import torch
+import PIL
+# from matplotlib import transforms
 from torch import optim
-import torchvision
 from torchvision import models, transforms
 
 vgg = models.vgg19(pretrained=True).features
@@ -38,8 +33,9 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 vgg.to(device)
 print("1 resources imported")
 
+
 def load_image(img_path, max_size=400, shape=None):
-    image = Image.open(img_path).convert('RGB')
+    image = PIL.Image.open(img_path).convert('RGB')
     if max(image.size) > max_size:
         size = max_size
     else:
@@ -61,10 +57,12 @@ def load_image(img_path, max_size=400, shape=None):
 
 # load content from file
 # todo: loading more
-content = load_image('images/mfi.jpg').to(device)
+content = load_image('C:/Projects/blender-pytorch-style-transfer/images/images/mfi.jpg').to(device)
 style = load_image('images/cubi.jpg').to(device)
 
 print("2 image loaded")
+
+
 def im_convert(tensor):
     image = tensor.to("cpu").clone().detach()
     image = image.numpy().squeeze()
@@ -74,6 +72,9 @@ def im_convert(tensor):
 
     return image
 
+
+print("Works So far !!!")
+'''  
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
 ax1.imshow(im_convert(content))
@@ -162,3 +163,5 @@ for ii in range(1, steps + 1):
     if ii % capture_frame == 0:
         image_array[counter] = im_convert(target)
         counter = counter + 1
+        
+'''
