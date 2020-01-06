@@ -25,8 +25,11 @@ bl_info = {
 import bpy
 
 from .style_transfer_op import StyleTransfer_OT_Operator
+from .style_transfer_op import StyleTransfer_OT_TextField
 from .style_transfer_panel import StyleTransfer_PT_Panel
+from .style_transfer_panel_new import RenderBurstCamerasPanel
+from .style_transfer_panel_new import RenderBurst
 
-classes = (StyleTransfer_OT_Operator, StyleTransfer_PT_Panel)
+classes = (StyleTransfer_OT_Operator, StyleTransfer_PT_Panel, RenderBurstCamerasPanel,StyleTransfer_OT_TextField)
 
 register, unregister = bpy.utils.register_classes_factory(classes)
