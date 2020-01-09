@@ -2,22 +2,19 @@ import bpy
 
 class StyleTransfer_PT_Panel(bpy.types.Panel):
     bl_idname = "view3d.cursor_center"
-    bl_label = "Simple operator"
-    bl_category = "Style Transfer by pluszak"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
+    bl_label = "Style Transfer by pluszak"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = 'WINDOW'
+    bl_context = "material"
+    COMPAT_ENGINES = {'CYCLES'}
 
     def draw(self, context):
         layout = self.layout
         row = layout.row()
-        row.operator('view3d.cursor_center', text='Center 3D xd 13')
-        row.operator('view3d.cursor_center', text='Center 3D xd 14')
-        row.operator('view3d.cursor_center', text='Center 3D xd 15')
         column = layout.column()
-
-        column.operator('view3d.cursor_center', text='Center 3D xd 16')
-        column.operator('view3d.cursor_center', text='Center 3D xd 17')
-        column.operator('view3d.textfield', text='Center 3D xd 18')
+        column.prop(context.window_manager, "pmc_texture_path")
+        column.prop(context.window_manager, "pmc_texture_path")
+        column.operator('view3d.textfield', text='Start')
         column.operator()
 
         wm = context.window_manager
