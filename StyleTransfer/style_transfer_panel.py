@@ -30,8 +30,8 @@ class StyleTransfer_PT_Panel(bpy.types.Panel, ImportHelper):
         row = layout.row()
         #GenerateOperator.string1 = bpy.context.scene.first_path
         #GenerateOperator.string2 = bpy.context.scene.second_path
-        row.operator('xd.generate')
-        row.operator('lol.generate')
+        #row.operator('xd.generate')
+        #row.operator('lol.generate')
 
         StyleTransfer_OT_Operator.content = bpy.context.scene.first_path
         StyleTransfer_OT_Operator.style =  bpy.context.scene.second_path
