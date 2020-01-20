@@ -29,7 +29,9 @@ from .style_transfer_op import StyleTransfer_OT_TextField
 from .style_transfer_panel import StyleTransfer_PT_Panel
 from .style_transfer_panel_new import RenderBurstCamerasPanel
 from .style_transfer_panel_new import RenderBurst
+from .operator_file_import import ImportSomeData
+from . test_panel import LayoutDemoPanel
 
-classes = (StyleTransfer_OT_Operator, StyleTransfer_PT_Panel, RenderBurstCamerasPanel,StyleTransfer_OT_TextField)
+classes = (StyleTransfer_OT_Operator, StyleTransfer_PT_Panel, RenderBurstCamerasPanel,StyleTransfer_OT_TextField, LayoutDemoPanel)
 
 register, unregister = bpy.utils.register_classes_factory(classes)

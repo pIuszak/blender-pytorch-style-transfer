@@ -1,6 +1,12 @@
-import bpy 
+import bpy
+from bpy.types import Operator, Panel
+'''
+'''
 
-class StyleTransfer_PT_Panel(bpy.types.Panel):
+from bpy_extras.io_utils import ImportHelper
+from . style_transfer_op import StyleTransfer_OT_Operator
+
+class StyleTransfer_PT_Panel(bpy.types.Panel, ImportHelper):
     bl_idname = "view3d.cursor_center"
     bl_label = "Style Transfer by pluszak"
     bl_space_type = "PROPERTIES"
@@ -12,9 +18,28 @@ class StyleTransfer_PT_Panel(bpy.types.Panel):
         layout = self.layout
         row = layout.row()
         column = layout.column()
-        column.prop(context.window_manager, "pmc_texture_path")
-        column.prop(context.window_manager, "pmc_texture_path")
-        column.operator('view3d.cursor_center', text='Start')
+
+        layout = self.layout
+
+        scene = context.scene
+
+        col = layout.column()
+        first_string = col.prop(context.scene, 'first_path')
+        fsecond_string = col.prop(context.scene, 'second_path')
+
+        row = layout.row()
+        #GenerateOperator.string1 = bpy.context.scene.first_path
+        #GenerateOperator.string2 = bpy.context.scene.second_path
+        row.operator('xd.generate')
+        row.operator('lol.generate')
+
+        StyleTransfer_OT_Operator.content = bpy.context.scene.first_path
+        StyleTransfer_OT_Operator.style =  bpy.context.scene.second_path
+
+        row.operator('view3d.cursor_center', text='Start Style Transfer')
+
+
+
         #column.operator()
 '''        wm = context.window_manager
         row = self.layout.row()

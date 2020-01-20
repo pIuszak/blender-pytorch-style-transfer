@@ -1,11 +1,6 @@
 
 '''  
 
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
-ax1.imshow(im_convert(content))
-ax1.axis("off")
-ax2.imshow(im_convert(style))
-ax2.axis("off")
 
 
 def get_features(image, model):
