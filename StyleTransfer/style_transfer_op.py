@@ -6,23 +6,24 @@ import bpy
 # info of addon -------------------
 
 # import matplotlib.pyplot as plt
+import bpy_extras
 import numpy as np
 import torch
 import PIL
 # from matplotlib import transforms
 from torch import optim
 from torchvision import models, transforms
-from bpy.types import Operator
-
-
+from bpy.types import Operator, Image
+from time import time
+from itertools import chain
+from PIL import Image as Img
+from matplotlib import cm
 
 
 class StyleTransfer_OT_TextField(bpy.types.Operator):
     bl_idname = "view3d.textfield"
     bl_label = "Simple asd"
     bl_description = "Center 3d asd"
-
-
 
     def execute(self, context):
         # bpy.ops.mesh.primitive_cube_add(size=2, enter_editmode=False, location=(0, 0, 0))
@@ -39,7 +40,7 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
     style = ""
     xd = 1
 
-    def im_convert(tensor):
+    def im_convert(self, tensor):
         image = tensor.to("cpu").clone().detach()
         image = image.numpy().squeeze()
         image = image.transpose(1, 2, 0)
@@ -86,7 +87,7 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
         # load content from file
         # todo: loading more
         # content = load_image('C:/Projects/blender-pytorch-style-transfer/images/images/mfi.jpg').to(device)
-        # style = load_image('images/cubi.jpg').to(device)
+        # style = load_image('C:\Projects\blender-pytorch-style-transfer\images\style/cubi.jpg').to(device)
 
         print("content image loaded ")
         self.content.replace('\\', '/')
@@ -94,6 +95,23 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
         print("style image loaded ")
         self.style.replace('\\', '/')
         print(self.style)
+
+        # content = bpy_extras.image_utils.load_image('images/content/mfi.jpg').to(device)
+        # style = bpy_extras.image_utils.load_image('images/style/cubi.jpg').to
+
+        # this load works in blender but is not compatibile with .to(device)
+        # content = bpy.data.images.load("C:/Projects/blender-pytorch-style-transfer/images/content/mfi.jpg", check_existing=True).to(device)
+        # print("content image loaded ")
+        # style = bpy.data.images.load("C:/Projects/blender-pytorch-style-transfer/images/style/cubi.jpg", check_existing=True).to(device)
+        # print("style image loaded ")
+
+        content = load_image("C:/Projects/blender-pytorch-style-transfer/images/content/test.jpg").to(device)
+        print("content image loaded ")
+        style = load_image("C:/Projects/blender-pytorch-style-transfer/images/style/test.jpg").to(device)
+        print("style image loaded ")
+
+        # content = bpy.data.images.load('images/content/mfi.jpg', False).to(device)
+        # style = bpy.data.images.load('images/style/cubi.jpg', False).t
 
         # plt to preview
         '''
@@ -122,8 +140,11 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
 
             return features
 
+        print("get_features defined ")
         content_features = get_features(content, vgg)
+        print("content_features defined ")
         style_features = get_features(style, vgg)
+        print("style_features defined ")
 
         def gram_matrix(tensor):
             _, d, h, w = tensor.size()
@@ -131,29 +152,35 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
             gram = torch.mm(tensor, tensor.t())
             return gram
 
+        print("gram_matrix defined ")
         style_grams = {layer: gram_matrix(style_features[layer]) for layer in style_features}
-
+        print("style_grams defined ")
         style_weights = {'conv1_1': 1.,
                          'conv2_1': 0.75,
                          'conv3_1': 0.2,
                          'conv4_1': 0.2,
                          'conv5_1': 0.2}
-
+        print("style_weights defined ")
         content_weight = 1  # alpha
         style_weight = 1e6  # beta
+
         target = content.clone().requires_grad_(True).to(device)
-
-        show_every = 300
+        print("target defined ")
+        show_every = 1
         optimizer = optim.Adam([target], lr=0.003)
-        steps = 2100
+        steps = 16
 
-        #height, width, channels = im_convert(target).shape
-        #image_array = np.empty(shape=(300, height, width, channels))
+        # height, width, channels = im_convert(target).shape
+        # image_array = np.empty(shape=(300, height, width, channels))
         capture_frame = steps / 300
         counter = 0
+        print("for loop started ")
         for ii in range(1, steps + 1):
+            # print("step ")
             target_features = get_features(target, vgg)
+            # print("target_features defined ")
             content_loss = torch.mean((target_features['conv4_2'] - content_features['conv4_2']) ** 2)
+            # print("content_loss defined ")
             style_loss = 0
 
             for layer in style_weights:
@@ -173,15 +200,50 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
             if ii % show_every == 0:
                 print('Total loss: ', total_loss.item())
                 print('Iteration: ', ii)
-                #plt.imshow(im_convert(target))
-                #plt.axis("off")
-                #plt.show()
+                # plt.imshow(im_convert(target))
+                # plt.axis("off")
+                # plt.show()
 
             if ii % capture_frame == 0:
-                #image_array[counter] = im_convert(target)
                 counter = counter + 1
 
-        #experimantal video transfe
+        # start = time()
+        # Image information. Change these to your liking.
+        NAME = 'Procedural Image'
+        WIDTH = 64
+        HEIGHT = 64
+        USE_ALPHA = True
+        newImage = bpy.data.images.new(NAME, WIDTH, HEIGHT, alpha=USE_ALPHA)
+
+        print("-----")
+        # import scipy.misc
+        # newImage = scipy.misc.toimage((self.im_convert(target)), cmin=0.0, cmax=...)
+
+        # print(type(self.im_convert(target)))
+        # newImage = Img.fromarray((self.im_convert(target)))
+        im = Img.fromarray((self.im_convert(target) * 255).astype(np.uint8))
+        import matplotlib.image as mpimg
+
+        # todo : this is workaround, to parse PIL Image to blender bpy.data
+        im.save("temp.jpg")
+        newImage = bpy.data.images.load("//temp.jpg")
+        newImage.update()
+        # newImage = Img.fromarray(np.uint8(cm.gist_earth(self.im_convert(target)) * 255))
+
+        # newImage.update()
+
+        # print('TIME TAKEN: %f seconds' % (time() - start))  # Outputs to the system console.
+
+        # Make all UV/Image Editor views show the new image.
+        for area in bpy.context.screen.areas:
+            if area.type == 'IMAGE_EDITOR':
+                for space in area.spaces:
+                    if space.type == 'IMAGE_EDITOR':
+                        space.image = newImage
+        # image_array[counter] = self.im_convert(target)
+
+        # All done.
+        # experimantal video transfe
         '''
         import cv2
 
@@ -197,7 +259,6 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
 
         vid.release()
         '''
-
 
         print("Works So far !!!")
         return {'FINISHED'}
@@ -217,5 +278,5 @@ class GenerateOperator(Operator):
         content = self.string1
         style = self.string2
 
-        #global style = self.string2
+        # global style = self.string2
         return {'FINISHED'}
