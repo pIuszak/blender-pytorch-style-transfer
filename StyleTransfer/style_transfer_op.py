@@ -50,6 +50,7 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
         return image
 
     def execute(self, context):
+        start = time()
         print("0 execute started")
         # form example to remove
         # bpy.ops.mesh.primitive_cube_add(size=2, enter_editmode=False, location=(0, 0, 0))
@@ -90,11 +91,11 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
         # style = load_image('C:\Projects\blender-pytorch-style-transfer\images\style/cubi.jpg').to(device)
 
         print("content image loaded ")
-        self.content.replace('\\', '/')
-        print(self.content + "xd")
+        # self.content
+        # print(self.content.strip() + "xd")
         print("style image loaded ")
-        self.style.replace('\\', '/')
-        print(self.style)
+        # self.style.replace('\\', '/')
+        # print(self.style.strip())
 
         # content = bpy_extras.image_utils.load_image('images/content/mfi.jpg').to(device)
         # style = bpy_extras.image_utils.load_image('images/style/cubi.jpg').to
@@ -103,11 +104,22 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
         # content = bpy.data.images.load("C:/Projects/blender-pytorch-style-transfer/images/content/mfi.jpg", check_existing=True).to(device)
         # print("content image loaded ")
         # style = bpy.data.images.load("C:/Projects/blender-pytorch-style-transfer/images/style/cubi.jpg", check_existing=True).to(device)
-        # print("style image loaded ")
 
-        content = load_image("C:/Projects/blender-pytorch-style-transfer/images/content/test.jpg").to(device)
+        self.content = bpy.path.abspath(self.content)
+        self.content.replace('\\', '/')
+
+        self.style = bpy.path.abspath(self.style)
+        self.style.replace('\\', '/')
+        print("XD "+ self.content)
+        print("XD "+ self.style)
+
+        c = load_image(self.content).to(device)
+        # print("content image loaded ")
+        s = load_image(self.style).to(device)
+
+        # c = load_image(self.content.strip()).to(device)
         print("content image loaded ")
-        style = load_image("C:/Projects/blender-pytorch-style-transfer/images/style/test.jpg").to(device)
+        # = load_image(self.content.strip()).to(device)
         print("style image loaded ")
 
         # content = bpy.data.images.load('images/content/mfi.jpg', False).to(device)
@@ -141,9 +153,9 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
             return features
 
         print("get_features defined ")
-        content_features = get_features(content, vgg)
+        content_features = get_features(c, vgg)
         print("content_features defined ")
-        style_features = get_features(style, vgg)
+        style_features = get_features(s, vgg)
         print("style_features defined ")
 
         def gram_matrix(tensor):
@@ -164,11 +176,11 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
         content_weight = 1  # alpha
         style_weight = 1e6  # beta
 
-        target = content.clone().requires_grad_(True).to(device)
+        target = c.clone().requires_grad_(True).to(device)
         print("target defined ")
         show_every = 1
         optimizer = optim.Adam([target], lr=0.003)
-        steps = 16
+        steps = 1
 
         # height, width, channels = im_convert(target).shape
         # image_array = np.empty(shape=(300, height, width, channels))
@@ -260,7 +272,7 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
         vid.release()
         '''
 
-        print("Works So far !!!")
+        print('TIME TAKEN: %f seconds' % (time() - start))  # Outputs to the system console.
         return {'FINISHED'}
 
 
