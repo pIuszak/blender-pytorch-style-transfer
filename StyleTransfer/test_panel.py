@@ -24,7 +24,11 @@ class LayoutDemoPanel(Panel, ImportHelper):
     description = "Define file path",
     subtype = 'FILE_PATH'
     )
-
+    bpy.types.Scene.steps = StringProperty(
+    name = "Steps",
+    default = "",
+    description = "Numbers of Steps",
+    )
 
     def draw(self, context):
         layout = self.layout

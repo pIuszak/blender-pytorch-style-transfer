@@ -38,7 +38,7 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
 
     content = ""
     style = ""
-    xd = 1
+    steps = ""
 
     def im_convert(self, tensor):
         image = tensor.to("cpu").clone().detach()
@@ -180,11 +180,11 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
         print("target defined ")
         show_every = 1
         optimizer = optim.Adam([target], lr=0.003)
-        steps = 1
 
+        steps = int(self.steps)
         # height, width, channels = im_convert(target).shape
         # image_array = np.empty(shape=(300, height, width, channels))
-        capture_frame = steps / 300
+        capture_frame = int(steps) / 300
         counter = 0
         print("for loop started ")
         for ii in range(1, steps + 1):

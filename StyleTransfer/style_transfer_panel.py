@@ -26,6 +26,7 @@ class StyleTransfer_PT_Panel(bpy.types.Panel, ImportHelper):
         col = layout.column()
         first_string = col.prop(context.scene, 'first_path')
         fsecond_string = col.prop(context.scene, 'second_path')
+        ss = col.prop(context.scene, 'steps')
 
         row = layout.row()
         #GenerateOperator.string1 = bpy.context.scene.first_path
@@ -35,6 +36,7 @@ class StyleTransfer_PT_Panel(bpy.types.Panel, ImportHelper):
 
         StyleTransfer_OT_Operator.content = bpy.context.scene.first_path
         StyleTransfer_OT_Operator.style =  bpy.context.scene.second_path
+        StyleTransfer_OT_Operator.steps = bpy.context.scene.steps
 
         row.operator('view3d.cursor_center', text='Start Style Transfer')
 
