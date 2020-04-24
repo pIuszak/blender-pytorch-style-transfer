@@ -66,12 +66,12 @@ if platform.system() == "Windows":
 elif platform.system() == "Linux":
 
     print(" ================== basename ", sys.exec_prefix)
-    command = "\"" + "pip install torch torchvision -t " + os.path.join(sys.exec_prefix, "binpython3") + "\""
+    command = "pip install torch torchvision -t " + "\"" + os.path.join(sys.exec_prefix, "bin/python3") + "\""
 
 elif platform.system() == "Darwin":
 
     print(" ================== basename ", sys.exec_prefix)
-    command = "\"" + "pip install torch torchvision -t " + os.path.join(sys.exec_prefix, "binpython3") + "\""
+    command = "pip install torch torchvision -t " + "\"" + os.path.join(sys.exec_prefix, "bin/python3") + "\""
 
 stream = os.popen(command)
 
