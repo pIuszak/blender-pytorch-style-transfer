@@ -24,12 +24,12 @@ def install_and_import(package):
 
 import sys
 
-
 import bpy
+
 wm = bpy.context.window_manager
 
-#PROGRESS ------------------------
-#https://www.youtube.com/watch?v=mRiTfLpRlRU
+# PROGRESS ------------------------
+# https://www.youtube.com/watch?v=mRiTfLpRlRU
 # # progress from [0 - 1000]
 
 
@@ -39,13 +39,13 @@ str_path = "my_path"
 
 import os
 from bpy.types import Operator, Image
+
 stream = os.popen('echo Returned output')
 output = stream.read()
 print(output)
 import subprocess
 
 # subprocess.call([data["om_points"], ">", diz['d']+"/points.xml"])
-
 
 
 command = 'xd'
@@ -61,16 +61,19 @@ if platform.system() == "Windows":
 
     print(" ================== basename ", sys.exec_prefix)
     command = "\"" + os.path.join(sys.exec_prefix,
-                              "bin\python.exe") + "\"" + " -m pip install torch===1.4.0 torchvision===0.5.0 -f https://download.pytorch.org/whl/torch_stable.html --user"
+                                  "bin\python.exe") + "\"" + " -m pip install torch===1.4.0 torchvision===0.5.0 -f https://download.pytorch.org/whl/torch_stable.html --user"
 
 elif platform.system() == "Linux":
 
     print(" ================== basename ", sys.exec_prefix)
-    command = "\"" + os.path.join(sys.exec_prefix,
-                              "bin\python") + "\"" + " -m pip install torch===1.4.0 torchvision===0.5.0 -f https://download.pytorch.org/whl/torch_stable.html --user"
+    command = "\"" + "pip install torch torchvision -t " + os.path.join(sys.exec_prefix, "binpython3") + "\""
+
+elif platform.system() == "Darwin":
+
+    print(" ================== basename ", sys.exec_prefix)
+    command = "\"" + "pip install torch torchvision -t " + os.path.join(sys.exec_prefix, "binpython3") + "\""
 
 stream = os.popen(command)
-
 
 
 # try:
@@ -80,7 +83,6 @@ stream = os.popen(command)
 #                      "https://download.pytorch.org/whl/torch_stable.html"])
 # finally:
 #     import torch
-
 
 
 class StyleTransfer_OT_TextField(bpy.types.Operator):
@@ -126,7 +128,6 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
         from time import time
         from itertools import chain
         from PIL import Image as Img
-
 
         start = time()
         print("0 execute started")
@@ -265,9 +266,7 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
         counter = 0
         print("for loop started ")
 
-
         wm.progress_begin(0, steps)
-
 
         for ii in range(1, steps + 1):
             wm.progress_update(ii)
@@ -319,10 +318,9 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
         # newImage = Img.fromarray((self.im_convert(target)))
         im = Img.fromarray((self.im_convert(target) * 255).astype(np.uint8))
 
-
         # todo : this is workaround, to parse PIL Image to blender bpy.data
-       # import subprocess
-        #subprocess.check_call(["attrib", "-w", "output.jpg"])
+        # import subprocess
+        # subprocess.check_call(["attrib", "-w", "output.jpg"])
         im.save(self.content)
         newImage = bpy.data.images.load(self.content)
         newImage.update()
