@@ -8,16 +8,79 @@ import bpy
 # import matplotlib.pyplot as plt
 import bpy_extras
 import numpy as np
-import torch
-import PIL
-# from matplotlib import transforms
-from torch import optim
-from torchvision import models, transforms
+import platform
+
+
+def install_and_import(package):
+    import importlib
+    try:
+        importlib.import_module(package)
+    except ImportError:
+        import pip
+        pip.main(['install', package])
+    finally:
+        globals()[package] = importlib.import_module(package)
+
+
+import sys
+
+
+import bpy
+wm = bpy.context.window_manager
+
+#PROGRESS ------------------------
+#https://www.youtube.com/watch?v=mRiTfLpRlRU
+# # progress from [0 - 1000]
+
+
+from pathlib import Path
+
+str_path = "my_path"
+
+import os
 from bpy.types import Operator, Image
-from time import time
-from itertools import chain
-from PIL import Image as Img
-from matplotlib import cm
+stream = os.popen('echo Returned output')
+output = stream.read()
+print(output)
+import subprocess
+
+# subprocess.call([data["om_points"], ">", diz['d']+"/points.xml"])
+
+
+
+command = 'xd'
+# command = "\"" + os.path.join(sys.exec_prefix, "bin\python.exe") + "\"" + " -m pip install matplotlib --user"
+# stream = os.popen(command)
+# output = stream.read()
+# print(output)
+
+# install_and_import('matplotlib')
+
+
+if platform.system() == "Windows":
+
+    print(" ================== basename ", sys.exec_prefix)
+    command = "\"" + os.path.join(sys.exec_prefix,
+                              "bin\python.exe") + "\"" + " -m pip install torch===1.4.0 torchvision===0.5.0 -f https://download.pytorch.org/whl/torch_stable.html --user"
+
+elif platform.system() == "Linux":
+
+    print(" ================== basename ", sys.exec_prefix)
+    command = "\"" + os.path.join(sys.exec_prefix,
+                              "bin\python") + "\"" + " -m pip install torch===1.4.0 torchvision===0.5.0 -f https://download.pytorch.org/whl/torch_stable.html --user"
+
+stream = os.popen(command)
+
+
+
+# try:
+#     import torch
+# except ImportError:
+#     subprocess.call([sys.executable, "-m", "pip", "install", 'torch==1.3.1+cpu', "-f",
+#                      "https://download.pytorch.org/whl/torch_stable.html"])
+# finally:
+#     import torch
+
 
 
 class StyleTransfer_OT_TextField(bpy.types.Operator):
@@ -50,6 +113,21 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
         return image
 
     def execute(self, context):
+
+        output = stream.read()
+        print(output)
+
+        import torch
+        import PIL
+        # from matplotlib import transforms
+        from torch import optim
+        from torchvision import models, transforms
+
+        from time import time
+        from itertools import chain
+        from PIL import Image as Img
+
+
         start = time()
         print("0 execute started")
         # form example to remove
@@ -90,7 +168,6 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
         # content = load_image('C:/Projects/blender-pytorch-style-transfer/images/images/mfi.jpg').to(device)
         # style = load_image('C:\Projects\blender-pytorch-style-transfer\images\style/cubi.jpg').to(device)
 
-        print("content image loaded ")
         # self.content
         # print(self.content.strip() + "xd")
         print("style image loaded ")
@@ -110,8 +187,8 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
 
         self.style = bpy.path.abspath(self.style)
         self.style.replace('\\', '/')
-        print("XD "+ self.content)
-        print("XD "+ self.style)
+        print("XD " + self.content)
+        print("XD " + self.style)
 
         c = load_image(self.content).to(device)
         # print("content image loaded ")
@@ -187,7 +264,13 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
         capture_frame = int(steps) / 300
         counter = 0
         print("for loop started ")
+
+
+        wm.progress_begin(0, steps)
+
+
         for ii in range(1, steps + 1):
+            wm.progress_update(ii)
             # print("step ")
             target_features = get_features(target, vgg)
             # print("target_features defined ")
@@ -228,17 +311,20 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
         newImage = bpy.data.images.new(NAME, WIDTH, HEIGHT, alpha=USE_ALPHA)
 
         print("-----")
+        wm.progress_end()
         # import scipy.misc
         # newImage = scipy.misc.toimage((self.im_convert(target)), cmin=0.0, cmax=...)
 
         # print(type(self.im_convert(target)))
         # newImage = Img.fromarray((self.im_convert(target)))
         im = Img.fromarray((self.im_convert(target) * 255).astype(np.uint8))
-        import matplotlib.image as mpimg
+
 
         # todo : this is workaround, to parse PIL Image to blender bpy.data
-        im.save("temp.jpg")
-        newImage = bpy.data.images.load("//temp.jpg")
+       # import subprocess
+        #subprocess.check_call(["attrib", "-w", "output.jpg"])
+        im.save(self.content)
+        newImage = bpy.data.images.load(self.content)
         newImage.update()
         # newImage = Img.fromarray(np.uint8(cm.gist_earth(self.im_convert(target)) * 255))
 

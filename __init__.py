@@ -15,7 +15,7 @@ bl_info = {
     "name": "StyleTransfer",
     "author": "pluszak",
     "description": "xdxdxdxd",
-    "blender": (2, 80, 0),
+    "blender": (2, 82, 0),
     "version": (0, 0, 1),
     "location": "View3D",
     "warning": "",
