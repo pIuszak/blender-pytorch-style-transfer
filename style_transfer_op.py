@@ -211,8 +211,8 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
 
 
 class GenerateOperator(Operator):
-    bl_idname = "xd.generate"
-    bl_label = "GENEREJT"
+    bl_idname = "op.generate"
+    bl_label = "GENERATE"
     string1 = ""
     string2 = ""
 
