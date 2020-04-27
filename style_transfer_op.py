@@ -27,9 +27,9 @@ def config_linux():
     command("\"" + os.path.join(sys.exec_prefix,
                                "bin\python3.7m") + "\"" + " -m ensurepip")
     command("\"" + os.path.join(sys.exec_prefix,
-                                "bin\python3.7m") + "\"" + " -m pip install" + " \"" + "linux" +"\\" + "torchvision-0.6.0-cp37-cp37m-win_amd64.whl")
+                                "bin\python3.7m") + "\"" + " -m pip install" + " \"" + "linux" +"\\" + "torchvision-0.6.0-cp37-cp37m-linux_x86_64.whl")
     command("\"" + os.path.join(sys.exec_prefix,
-                                "bin\python3.7m") + "\"" + " -m pip install" + " \"" + "linux" +"\\" +"torch-1.5.0-cp37-cp37m-win_amd64.whl")
+                                "bin\python3.7m") + "\"" + " -m pip install" + " \"" + "linux" +"\\" +"torch-1.5.0-cp37-cp37m-linux_x86_64.whl")
     command("\"" + os.path.join(sys.exec_prefix,
                                 "bin\python3.7m") + "\"" + " -m pip install Pillow")
 
