@@ -1,5 +1,5 @@
 import bpy_extras
-import numpy as np
+
 import platform
 import sys
 import bpy
@@ -10,20 +10,46 @@ str_path = "my_path"
 import os
 from bpy.types import Operator, Image
 
+def command(cmd):
+    os.popen(cmd)
+
+def config_windows():
+    command("\"" + os.path.join(sys.exec_prefix,
+                               "bin\python.exe") + "\"" + " -m ensurepip")
+    command("\"" + os.path.join(sys.exec_prefix,
+                                "bin\python.exe") + "\"" + " -m pip install" + " \"" + "windows" +"\\" + "torchvision-0.6.0-cp37-cp37m-win_amd64.whl")
+    command("\"" + os.path.join(sys.exec_prefix,
+                                "bin\python.exe") + "\"" + " -m pip install" + " \"" + "windows" +"\\" +"torch-1.5.0-cp37-cp37m-win_amd64.whl")
+    command("\"" + os.path.join(sys.exec_prefix,
+                                "bin\python.exe") + "\"" + " -m pip install Pillow")
+
+def config_linux():
+    command("\"" + os.path.join(sys.exec_prefix,
+                               "bin\python3.7m") + "\"" + " -m ensurepip")
+    command("\"" + os.path.join(sys.exec_prefix,
+                                "bin\python3.7m") + "\"" + " -m pip install" + " \"" + "linux" +"\\" + "torchvision-0.6.0-cp37-cp37m-win_amd64.whl")
+    command("\"" + os.path.join(sys.exec_prefix,
+                                "bin\python3.7m") + "\"" + " -m pip install" + " \"" + "linux" +"\\" +"torch-1.5.0-cp37-cp37m-win_amd64.whl")
+    command("\"" + os.path.join(sys.exec_prefix,
+                                "bin\python3.7m") + "\"" + " -m pip install Pillow")
+
+
 if platform.system() == "Windows":
-    command = "\"" + os.path.join(sys.exec_prefix,
-                                  "bin\python.exe") + "\"" + " -m pip install torch===1.4.0 torchvision===0.5.0 -f https://download.pytorch.org/whl/torch_stable.html --user"
+    config_windows()
 
-elif platform.system() == "Linux":
+import torch
+import PIL
+import numpy as np
 
-    command = "pip install torch torchvision -t " + "\"" + os.path.join(sys.exec_prefix, "bin/python3") + "\""
+# from matplotlib import transforms
+from torch import optim
+from torchvision import models, transforms
 
-elif platform.system() == "Darwin":
+from time import time
+from itertools import chain
+from PIL import Image as Img
 
-    command = "pip install torch torchvision -t " + "\"" + os.path.join(sys.exec_prefix, "bin/python3") + "\""
-
-stream = os.popen(command)
-
+vgg = models.vgg19(pretrained=True).features
 
 class StyleTransfer_OT_TextField(bpy.types.Operator):
     bl_idname = "view3d.textfield"
@@ -55,21 +81,9 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
 
     def execute(self, context):
 
-        output = stream.read()
-        print(output)
-
-        import torch
-        import PIL
-        # from matplotlib import transforms
-        from torch import optim
-        from torchvision import models, transforms
-
-        from time import time
-        from itertools import chain
-        from PIL import Image as Img
-
         start = time()
-        vgg = models.vgg19(pretrained=True).features
+        steps = int(self.steps)
+        wm.progress_begin(0, steps)
 
         for param in vgg.parameters():
             param.requires_grad_(False)
@@ -146,17 +160,15 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
 
         target = c.clone().requires_grad_(True).to(device)
         show_every = 1
+        #set up optimizer
         optimizer = optim.Adam([target], lr=0.003)
-
-        steps = int(self.steps)
 
         capture_frame = int(steps) / 300
         counter = 0
 
-        wm.progress_begin(0, steps)
-
-        for ii in range(1, steps + 1):
-            wm.progress_update(ii)
+        # iterations
+        for j in range(1, steps + 1):
+            wm.progress_update(j)
             target_features = get_features(target, vgg)
             content_loss = torch.mean((target_features['conv4_2'] - content_features['conv4_2']) ** 2)
             style_loss = 0
@@ -175,12 +187,7 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
             total_loss.backward()
             optimizer.step()
 
-            if ii % show_every == 0:
-                print('Total loss: ', total_loss.item())
-                print('Iteration: ', ii)
 
-            if ii % capture_frame == 0:
-                counter = counter + 1
 
         # Image information. Change these to your liking.
         NAME = 'Procedural Image'
@@ -204,7 +211,7 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
                 for space in area.spaces:
                     if space.type == 'IMAGE_EDITOR':
                         space.image = newImage
-        # image_array[counter] = self.im_convert(target)
+
 
         print('TIME TAKEN: %f seconds' % (time() - start))  # Outputs to the system console.
         return {'FINISHED'}
