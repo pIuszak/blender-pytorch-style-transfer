@@ -13,8 +13,8 @@
 
 bl_info = {
     "name": "StyleTransfer",
-    "author": "pluszak",
-    "description": "xdxdxdxd",
+    "author": "Paweł Luszuk",
+    "description": "Implement the Neural-Style algorithm developed by Leon A. Gatys, Alexander S. Ecker and Matthias Bethge. Neural-Style, or Neural-Transfer, allows you to take an image and reproduce it with a new artistic style. ",
     "blender": (2, 82, 0),
     "version": (0, 0, 1),
     "location": "View3D",
