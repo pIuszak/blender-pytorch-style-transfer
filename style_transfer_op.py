@@ -3,6 +3,7 @@ import bpy_extras
 import platform
 import sys
 import bpy
+import numpy as np
 
 wm = bpy.context.window_manager
 str_path = "my_path"
@@ -10,46 +11,64 @@ str_path = "my_path"
 import os
 from bpy.types import Operator, Image
 
-def command(cmd):
-    os.popen(cmd)
+
+def exec(cmd):
+    stream = os.popen(cmd)
+    output = stream.read()
+    print(output)
 
 def config_windows():
-    command("\"" + os.path.join(sys.exec_prefix,
-                               "bin\python.exe") + "\"" + " -m ensurepip")
-    command("\"" + os.path.join(sys.exec_prefix,
-                                "bin\python.exe") + "\"" + " -m pip install" + " \"" + "windows" +"\\" + "torchvision-0.6.0-cp37-cp37m-win_amd64.whl")
-    command("\"" + os.path.join(sys.exec_prefix,
-                                "bin\python.exe") + "\"" + " -m pip install" + " \"" + "windows" +"\\" +"torch-1.5.0-cp37-cp37m-win_amd64.whl")
-    command("\"" + os.path.join(sys.exec_prefix,
-                                "bin\python.exe") + "\"" + " -m pip install Pillow")
+    # command("\"" + os.path.join(sys.exec_prefix,
+    #                             "bin\python.exe") + "\"" + " -m ensurepip")
+    command = "\"" + os.path.join(sys.exec_prefix,
+                                  "bin\python.exe") + "\"" + " -m pip install " + "\"" + bpy.utils.user_resource(
+        'SCRIPTS',
+        "addons") + "\\" + "blender-pytorch-style-transfer\\windows" + "\\" + "torch-1.5.0-cp37-cp37m-win_amd64.whl" + "\" --user"
+    command.replace('\\', '/')
+    exec(command)
+
+    command = "\"" + os.path.join(sys.exec_prefix,
+                                  "bin\python.exe") + "\"" + " -m pip install " + "\"" + bpy.utils.user_resource(
+        'SCRIPTS',
+        "addons") + "\\" + "blender-pytorch-style-transfer\\windows" + "\\" + "torchvision-0.6.0-cp37-cp37m-win_amd64.whl" + "\" --user"
+    command.replace('\\', '/')
+    exec(command)
+
+    command = "\"" + os.path.join(sys.exec_prefix,
+                                  "bin\python.exe") + "\"" + " -m pip install Pillow --user"
+    command.replace('\\', '/')
+    exec(command)
 
 def config_linux():
-    command("\"" + os.path.join(sys.exec_prefix,
-                               "bin\python3.7m") + "\"" + " -m ensurepip")
-    command("\"" + os.path.join(sys.exec_prefix,
-                                "bin\python3.7m") + "\"" + " -m pip install" + " \"" + "linux" +"\\" + "torchvision-0.6.0-cp37-cp37m-linux_x86_64.whl")
-    command("\"" + os.path.join(sys.exec_prefix,
-                                "bin\python3.7m") + "\"" + " -m pip install" + " \"" + "linux" +"\\" +"torch-1.5.0-cp37-cp37m-linux_x86_64.whl")
-    command("\"" + os.path.join(sys.exec_prefix,
-                                "bin\python3.7m") + "\"" + " -m pip install Pillow")
+    # command("\"" + os.path.join(sys.exec_prefix,
+    #                             "bin\python.exe") + "\"" + " -m ensurepip")
+    command = "\"" + os.path.join(sys.exec_prefix,
+                                  "bin\python3.7m") + "\"" + " -m pip install " + "\"" + bpy.utils.user_resource(
+        'SCRIPTS',
+        "addons") + "\\" + "blender-pytorch-style-transfer\\windows" + "\\" + "torch-1.5.0-cp37-cp37m-win_amd64.whl" + "\""
+    command.replace('\\', '/')
+    exec(command)
+
+    command = "\"" + os.path.join(sys.exec_prefix,
+                                  "bin\python3.7m") + "\"" + " -m pip install " + "\"" + bpy.utils.user_resource(
+        'SCRIPTS',
+        "addons") + "\\" + "blender-pytorch-style-transfer\\windows" + "\\" + "torchvision-0.6.0-cp37-cp37m-win_amd64.whl" + "\""
+    command.replace('\\', '/')
+    exec(command)
+
+    command = "\"" + os.path.join(sys.exec_prefix,
+                                  "bin\python3.7m") + "\"" + " -m pip install Pillow"
+    command.replace('\\', '/')
+    exec(command)
+
 
 
 if platform.system() == "Windows":
     config_windows()
 
-import torch
-import PIL
-import numpy as np
+if platform.system() == "Linux":
+    config_linux()
 
-# from matplotlib import transforms
-from torch import optim
-from torchvision import models, transforms
-
-from time import time
-from itertools import chain
-from PIL import Image as Img
-
-vgg = models.vgg19(pretrained=True).features
 
 class StyleTransfer_OT_TextField(bpy.types.Operator):
     bl_idname = "view3d.textfield"
@@ -80,6 +99,20 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
         return image
 
     def execute(self, context):
+
+        import torch
+        import PIL
+
+
+        # from matplotlib import transforms
+        from torch import optim
+        from torchvision import models, transforms
+
+        from time import time
+        from itertools import chain
+        from PIL import Image as Img
+
+        vgg = models.vgg19(pretrained=True).features
 
         start = time()
         steps = int(self.steps)
@@ -160,7 +193,7 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
 
         target = c.clone().requires_grad_(True).to(device)
         show_every = 1
-        #set up optimizer
+        # set up optimizer
         optimizer = optim.Adam([target], lr=0.003)
 
         capture_frame = int(steps) / 300
@@ -187,8 +220,6 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
             total_loss.backward()
             optimizer.step()
 
-
-
         # Image information. Change these to your liking.
         NAME = 'Procedural Image'
         WIDTH = 64
@@ -211,7 +242,6 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
                 for space in area.spaces:
                     if space.type == 'IMAGE_EDITOR':
                         space.image = newImage
-
 
         print('TIME TAKEN: %f seconds' % (time() - start))  # Outputs to the system console.
         return {'FINISHED'}
