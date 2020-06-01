@@ -1,22 +1,30 @@
 import bpy_extras
-
 import platform
 import sys
 import bpy
 import numpy as np
+import torch
+import PIL
+import ssl
+import os
+
+from torch import optim
+from torchvision import models, transforms
+from time import time
+from itertools import chain
+from PIL import Image as Img
+from bpy.types import Operator, Image
 
 wm = bpy.context.window_manager
 str_path = "my_path"
 
-import os
-from bpy.types import Operator, Image
-
-
+# execute terminal command and return output
 def exec(cmd):
     stream = os.popen(cmd)
     output = stream.read()
     print(output)
 
+# install required packages for windows
 def config_windows():
     print("Windows Config")
     # command("\"" + os.path.join(sys.exec_prefix,
@@ -40,10 +48,11 @@ def config_windows():
     command.replace('\\', '/')
     exec(command)
 
+# install required packages for linux
 def config_linux():
     print("Linux Config")
     command = "\"" + os.path.join(sys.exec_prefix,
-                                "bin/python3.7m") + "\"" + " -m ensurepip --user"
+                                  "bin/python3.7m") + "\"" + " -m ensurepip --user"
     exec(command)
     command = "\"" + os.path.join(sys.exec_prefix,
                                   "bin/python3.7m") + "\"" + " -m pip install " + "\"" + bpy.utils.user_resource(
@@ -64,7 +73,6 @@ def config_linux():
     command.replace('\\', '/')
     exec(command)
 
-print(str(platform.system()))
 
 if platform.system() == "Windows":
     config_windows()
@@ -72,7 +80,7 @@ if platform.system() == "Windows":
 if platform.system() == "Linux":
     config_linux()
 
-
+# Class For Textfield to images path's
 class StyleTransfer_OT_TextField(bpy.types.Operator):
     bl_idname = "view3d.textfield"
     bl_label = "Style Transfer"
@@ -82,7 +90,7 @@ class StyleTransfer_OT_TextField(bpy.types.Operator):
         bpy.ops.import_test.some_data('INVOKE_DEFAULT')
         return {'FINISHED'}
 
-
+# Main Class whole addon is contained here
 class StyleTransfer_OT_Operator(bpy.types.Operator):
     bl_idname = "view3d.cursor_center"
     bl_label = "Simple operator"
@@ -91,9 +99,9 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
     content = ""
     style = ""
     resolution = ""
-    steps = ""
+    iterations = ""
 
-
+    # image converter
     def im_convert(self, tensor):
         image = tensor.to("cpu").clone().detach()
         image = image.numpy().squeeze()
@@ -103,35 +111,28 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
 
         return image
 
+    # main function
     def execute(self, context):
-
-        import torch
-        import PIL
-
-
-        # from matplotlib import transforms
-        from torch import optim
-        from torchvision import models, transforms
-
-        from time import time
-        from itertools import chain
-        from PIL import Image as Img
-        import ssl
+        # fix for linux ssl error in vgg downloading
         ssl._create_default_https_context = ssl._create_unverified_context
 
-        vgg = models.vgg19(pretrained=True).features
+        # downloading and declaration of vgg19 model
+        vgg19 = models.vgg19(pretrained=True).features
 
-        start = time()
-        steps = int(self.steps)
+        # get number of iterations and resolution value from UI field
+        iterations = int(self.iterations)
         resolution = int(self.resolution)
-        wm.progress_begin(0, steps)
 
-        for param in vgg.parameters():
+        # start loading indicator on cursor
+        wm.progress_begin(0, iterations)
+
+        for param in vgg19.parameters():
             param.requires_grad_(False)
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        vgg.to(device)
+        vgg19.to(device)
 
+        # load image, resize to resolution set by UI and normalize it to tensor
         def load_image(img_path, max_size=resolution, shape=None):
             image = PIL.Image.open(img_path).convert('RGB')
             if max(image.size) > max_size:
@@ -162,13 +163,10 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
         c = load_image(self.content).to(device)
         s = load_image(self.style).to(device)
 
-        def get_features(image, model):
+        # VGG19
+        def features(image, model):
 
-            layers = {'0': 'conv1_1',
-                      '5': 'conv2_1',
-                      '10': 'conv3_1',
-                      '19': 'conv4_1',
-                      '21': 'conv4_2',  # Content Extraction
+            layers = {'0': 'conv1_1', '5': 'conv2_1', '10': 'conv3_1', '19': 'conv4_1', '21': 'conv4_2',
                       '28': 'conv5_1'}
 
             features = {}
@@ -180,16 +178,17 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
 
             return features
 
-        content_features = get_features(c, vgg)
-        style_features = get_features(s, vgg)
+        content_features = features(c, vgg19)
+        style_features = features(s, vgg19)
 
-        def gram_matrix(tensor):
+        # Gram Matrix
+        def gram(tensor):
             _, d, h, w = tensor.size()
             tensor = tensor.view(d, h * w)
             gram = torch.mm(tensor, tensor.t())
             return gram
 
-        style_grams = {layer: gram_matrix(style_features[layer]) for layer in style_features}
+        style_grams = {layer: gram(style_features[layer]) for layer in style_features}
         style_weights = {'conv1_1': 1.,
                          'conv2_1': 0.75,
                          'conv3_1': 0.2,
@@ -200,33 +199,34 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
         style_weight = 1e6  # beta
 
         target = c.clone().requires_grad_(True).to(device)
-        show_every = 1
+
         # set up optimizer
         optimizer = optim.Adam([target], lr=0.003)
 
-        capture_frame = int(steps) / 300
-        counter = 0
-
-        if torch.cuda.is_available():
-            print("torch.cuda.is_available()")
-        else:
-            print("no torch.cuda.is_available()")
-        # iterations
-        for j in range(1, steps + 1):
+        # main loop (for every iteration)
+        for j in range(1, iterations + 1):
+            # update progress indicator
             wm.progress_update(j)
-            target_features = get_features(target, vgg)
-            content_loss = torch.mean((target_features['conv4_2'] - content_features['conv4_2']) ** 2)
+            # get features from a target (content image)
+            target_features = features(target, vgg19)
+            #reset style loss
             style_loss = 0
 
+            # inner loop (for every layer from VGG19) to count style loss
+            # style loss i result of a combined loss from five different layers within our model
             for layer in style_weights:
+                # collect target feature
                 target_feature = target_features[layer]
-                target_gram = gram_matrix(target_feature)
+                # apply gram matrix function to out target
+                target_gram = gram(target_feature)
+                # apply gram matrix function to out style
                 style_gram = style_grams[layer]
-                layer_style_loss = style_weights[layer] * torch.mean((target_gram - style_gram) ** 2)
+                # depth, height, width
                 _, d, h, w = target_feature.shape
-                style_loss += layer_style_loss / (d * h * w)
+                # calculate weighted average of loss
+                style_loss += self.MSE(layer, style_gram, style_weights, target_gram) / (d * h * w)
 
-            total_loss = content_weight * content_loss + style_weight * style_loss
+            total_loss = content_weight * self.calc_content_loss(content_features, target_features) + style_weight * style_loss
 
             optimizer.zero_grad()
             total_loss.backward()
@@ -255,25 +255,13 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
                     if space.type == 'IMAGE_EDITOR':
                         space.image = newImage
 
-        print('TIME TAKEN: %f seconds' % (time() - start))
-
 
         return {'FINISHED'}
 
+    def MSE(self, layer, style_gram, style_weights, target_gram):
+        return style_weights[layer] * torch.mean((target_gram - style_gram) ** 2)
 
-class GenerateOperator(Operator):
-    bl_idname = "op.generate"
-    bl_label = "GENERATE"
-    string1 = ""
-    string2 = ""
+    def calc_content_loss(self, content_features, target_features):
+        return torch.mean((target_features['conv4_2'] - content_features['conv4_2']) ** 2)
 
-    def execute(self, context):
-        # set_paths(self, context, self.string1, ".drl")
-        global content
-        global style
 
-        content = self.string1
-        style = self.string2
-
-        # global style = self.string2
-        return {'FINISHED'}

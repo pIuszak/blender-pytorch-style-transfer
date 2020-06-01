@@ -35,10 +35,10 @@ class StyleTransfer_PT_Panel(bpy.types.Panel, ImportHelper):
     default = "1024",
     description = "Numbers of X and Y in final image",
     )
-    bpy.types.Scene.steps = StringProperty(
-    name = "Steps",
+    bpy.types.Scene.iterations = StringProperty(
+    name = "Iterations",
     default = "2048",
-    description = "Numbers of Steps",
+    description = "Numbers of Iterations",
     )
 
 
@@ -55,7 +55,7 @@ class StyleTransfer_PT_Panel(bpy.types.Panel, ImportHelper):
         first_string = col.prop(context.scene, 'first_path')
         fsecond_string = col.prop(context.scene, 'second_path')
         rs = col.prop(context.scene, 'resolution')
-        ss = col.prop(context.scene, 'steps')
+        it = col.prop(context.scene, 'iterations')
 
 
         row = layout.row()
@@ -64,7 +64,7 @@ class StyleTransfer_PT_Panel(bpy.types.Panel, ImportHelper):
         StyleTransfer_OT_Operator.content = bpy.context.scene.first_path
         StyleTransfer_OT_Operator.style =  bpy.context.scene.second_path
         StyleTransfer_OT_Operator.resolution = bpy.context.scene.resolution
-        StyleTransfer_OT_Operator.steps = bpy.context.scene.steps
+        StyleTransfer_OT_Operator.iterations = bpy.context.scene.iterations
 
 
         row.operator('view3d.cursor_center', text='Start Style Transfer')
