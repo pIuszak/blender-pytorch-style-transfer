@@ -87,7 +87,9 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
 
     content = ""
     style = ""
+    resolution = ""
     steps = ""
+
 
     def im_convert(self, tensor):
         image = tensor.to("cpu").clone().detach()
@@ -116,6 +118,7 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
 
         start = time()
         steps = int(self.steps)
+        resolution = int(self.resolution)
         wm.progress_begin(0, steps)
 
         for param in vgg.parameters():
@@ -124,7 +127,7 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         vgg.to(device)
 
-        def load_image(img_path, max_size=400, shape=None):
+        def load_image(img_path, max_size=resolution, shape=None):
             image = PIL.Image.open(img_path).convert('RGB')
             if max(image.size) > max_size:
                 size = max_size
@@ -199,6 +202,10 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
         capture_frame = int(steps) / 300
         counter = 0
 
+        if torch.cuda.is_available():
+            print("torch.cuda.is_available()")
+        else:
+            print("no torch.cuda.is_available()")
         # iterations
         for j in range(1, steps + 1):
             wm.progress_update(j)
@@ -243,7 +250,9 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
                     if space.type == 'IMAGE_EDITOR':
                         space.image = newImage
 
-        print('TIME TAKEN: %f seconds' % (time() - start))  # Outputs to the system console.
+        print('TIME TAKEN: %f seconds' % (time() - start))
+
+
         return {'FINISHED'}
 
 
