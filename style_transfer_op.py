@@ -18,6 +18,7 @@ def exec(cmd):
     print(output)
 
 def config_windows():
+    print("Windows Config")
     # command("\"" + os.path.join(sys.exec_prefix,
     #                             "bin\python.exe") + "\"" + " -m ensurepip")
     command = "\"" + os.path.join(sys.exec_prefix,
@@ -40,28 +41,30 @@ def config_windows():
     exec(command)
 
 def config_linux():
-    # command("\"" + os.path.join(sys.exec_prefix,
-    #                             "bin\python.exe") + "\"" + " -m ensurepip")
+    print("Linux Config")
     command = "\"" + os.path.join(sys.exec_prefix,
-                                  "bin\python3.7m") + "\"" + " -m pip install " + "\"" + bpy.utils.user_resource(
+                                "bin/python3.7m") + "\"" + " -m ensurepip --user"
+    exec(command)
+    command = "\"" + os.path.join(sys.exec_prefix,
+                                  "bin/python3.7m") + "\"" + " -m pip install " + "\"" + bpy.utils.user_resource(
         'SCRIPTS',
-        "addons") + "\\" + "blender-pytorch-style-transfer\\windows" + "\\" + "torch-1.5.0-cp37-cp37m-win_amd64.whl" + "\""
+        "addons") + "/" + "blender-pytorch-style-transfer/linux" + "/" + "torch-1.5.0-cp37-cp37m-linux_x86_64.whl" + "\" --user"
     command.replace('\\', '/')
     exec(command)
 
     command = "\"" + os.path.join(sys.exec_prefix,
-                                  "bin\python3.7m") + "\"" + " -m pip install " + "\"" + bpy.utils.user_resource(
+                                  "bin/python3.7m") + "\"" + " -m pip install " + "\"" + bpy.utils.user_resource(
         'SCRIPTS',
-        "addons") + "\\" + "blender-pytorch-style-transfer\\windows" + "\\" + "torchvision-0.6.0-cp37-cp37m-win_amd64.whl" + "\""
+        "addons") + "/" + "blender-pytorch-style-transfer/linux" + "/" + "torchvision-0.6.0-cp37-cp37m-linux_x86_64.whl" + "\" --user"
     command.replace('\\', '/')
     exec(command)
 
     command = "\"" + os.path.join(sys.exec_prefix,
-                                  "bin\python3.7m") + "\"" + " -m pip install Pillow"
+                                  "bin/python3.7m") + "\"" + " -m pip install Pillow --user"
     command.replace('\\', '/')
     exec(command)
 
-
+print(str(platform.system()))
 
 if platform.system() == "Windows":
     config_windows()
@@ -113,6 +116,8 @@ class StyleTransfer_OT_Operator(bpy.types.Operator):
         from time import time
         from itertools import chain
         from PIL import Image as Img
+        import ssl
+        ssl._create_default_https_context = ssl._create_unverified_context
 
         vgg = models.vgg19(pretrained=True).features
 
